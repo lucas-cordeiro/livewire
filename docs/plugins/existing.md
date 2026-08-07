@@ -209,7 +209,7 @@ val livewireClient = LivewireClient {
 
 Every launch records a new session (JSONL per plugin + metadata under the app's private storage), keeping the most recent 20 — tune with `recordSessions(maxSessions = ...)`. Plugins contribute their own recording channels; today Logs and Network record, and more can adopt the `SessionChannel` API.
 
-On Android, a built-in session browser lists recorded sessions and shares any of them as a zip — wire it to a debug entry point in your app:
+On Android, a built-in session browser lists recorded sessions and exports any of them as a zip — **Share** opens the system share sheet, **Download** saves it to the device's Downloads folder as `livewire-<appId>-<timestamp>.zip` (handy over adb: `adb pull /sdcard/Download/<file>.zip`). Wire it to a debug entry point in your app:
 
 ```kotlin
 LivewireSessions.launch(context)

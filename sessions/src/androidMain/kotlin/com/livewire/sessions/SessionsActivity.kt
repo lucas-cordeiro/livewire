@@ -1,8 +1,10 @@
 package com.livewire.sessions
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.lifecycle.lifecycleScope
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +30,9 @@ import androidx.compose.ui.unit.dp
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SessionsActivity : ComponentActivity() {
 
@@ -47,8 +52,19 @@ class SessionsActivity : ComponentActivity() {
             }
           },
           onShare = { session -> SessionExporter.share(this, session) },
+          onDownload = { session -> downloadSession(session) },
         )
       }
+    }
+  }
+
+  private fun downloadSession(session: RecordedSession) {
+    lifecycleScope.launch {
+      val savedTo = withContext(Dispatchers.IO) {
+        SessionExporter.download(this@SessionsActivity, session)
+      }
+      val message = savedTo?.let { "Saved to $it" } ?: "Could not save session"
+      Toast.makeText(this@SessionsActivity, message, Toast.LENGTH_LONG).show()
     }
   }
 }
@@ -62,10 +78,11 @@ private data class SessionRowData(
 private fun SessionsScreen(
   rows: List<SessionRowData>,
   onShare: (RecordedSession) -> Unit,
+  onDownload: (RecordedSession) -> Unit,
 ) {
   Surface(modifier = Modifier.fillMaxSize()) {
     Box(modifier = Modifier.safeDrawingPadding()) {
-      SessionsList(rows = rows, onShare = onShare)
+      SessionsList(rows = rows, onShare = onShare, onDownload = onDownload)
     }
   }
 }
@@ -74,6 +91,7 @@ private fun SessionsScreen(
 private fun SessionsList(
   rows: List<SessionRowData>,
   onShare: (RecordedSession) -> Unit,
+  onDownload: (RecordedSession) -> Unit,
 ) {
   if (rows.isEmpty()) {
     Box(
@@ -96,7 +114,11 @@ private fun SessionsList(
       .padding(16.dp),
   ) {
     items(rows, key = { it.session.directoryName }) { row ->
-      SessionRow(row = row, onShare = { onShare(row.session) })
+      SessionRow(
+        row = row,
+        onShare = { onShare(row.session) },
+        onDownload = { onDownload(row.session) },
+      )
     }
   }
 }
@@ -105,6 +127,7 @@ private fun SessionsList(
 private fun SessionRow(
   row: SessionRowData,
   onShare: () -> Unit,
+  onDownload: () -> Unit,
 ) {
   Row(
     verticalAlignment = Alignment.CenterVertically,
@@ -127,6 +150,9 @@ private fun SessionRow(
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
+    }
+    TextButton(onClick = onDownload) {
+      Text("Download")
     }
     TextButton(onClick = onShare) {
       Text("Share")
