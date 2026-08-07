@@ -36,6 +36,7 @@ import com.livewire.ui.data.ClientManifest
 import com.livewire.ui.data.DarkModeChange
 import com.livewire.ui.data.PluginSelected
 import com.livewire.ui.theme.LivewireTheme
+import kotlin.system.exitProcess
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -140,7 +141,7 @@ fun main() = application {
         settings.windowX = position.x.value.toInt()
         settings.windowY = position.y.value.toInt()
       }
-      exitApplication()
+      exitProcess(0)
     },
     title = "Livewire",
     icon = painterResource(Res.drawable.icon),
