@@ -1,0 +1,44 @@
+name: Host installers
+
+on:
+  workflow_dispatch:
+
+jobs:
+  windows-msi:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Package MSI
+        shell: bash
+        run: ./gradlew :host:packageDistributionForCurrentOS --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: livewire-host-windows-msi
+          path: host/build/compose/binaries/**/*.msi
+
+  macos-dmg:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Package DMG
+        run: ./gradlew :host:packageDistributionForCurrentOS --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: livewire-host-macos-dmg
+          path: host/build/compose/binaries/**/*.dmg
