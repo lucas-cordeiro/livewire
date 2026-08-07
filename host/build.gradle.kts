@@ -105,6 +105,11 @@ compose.desktop {
 
       windows {
         iconFile.set(project.file("icons/windows/icon.ico"))
+        menu = true
+        menuGroup = "Livewire"
+        shortcut = true
+        dirChooser = true
+        upgradeUuid = "9a41f7c2-3d68-4e0b-8f52-6c1d90b7ae35"
       }
     }
   }
