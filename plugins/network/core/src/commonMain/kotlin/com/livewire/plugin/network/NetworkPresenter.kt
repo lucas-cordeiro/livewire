@@ -7,8 +7,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.livewire.plugin.network.data.NetworkEvent
 import com.livewire.plugin.network.data.NetworkEventCollector
+import kotlinx.coroutines.flow.StateFlow
 
-class NetworkPresenter {
+class NetworkPresenter(
+  private val source: StateFlow<List<NetworkEvent>> = NetworkEventCollector.events,
+  private val onClearAll: (() -> Unit)? = { NetworkEventCollector.clear() },
+) {
 
   private var selectedEvent by mutableStateOf<NetworkEvent?>(null)
   private var filterText by mutableStateOf("")
@@ -16,7 +20,7 @@ class NetworkPresenter {
 
   @Composable
   fun present(): NetworkUiState {
-    val allEvents by NetworkEventCollector.events.collectAsState()
+    val allEvents by source.collectAsState()
 
     val filteredEvents = if (filterText.isBlank()) {
       allEvents
@@ -39,6 +43,7 @@ class NetworkPresenter {
       selectedEvent = currentSelected,
       filterText = filterText,
       expandedSections = expandedSections,
+      canClear = onClearAll != null,
     ) { event ->
       when (event) {
         is NetworkUiEvent.SelectEvent -> {
@@ -56,7 +61,7 @@ class NetworkPresenter {
         }
 
         NetworkUiEvent.ClearAll -> {
-          NetworkEventCollector.clear()
+          onClearAll?.invoke()
           selectedEvent = null
           filterText = ""
           expandedSections = DefaultExpandedSections

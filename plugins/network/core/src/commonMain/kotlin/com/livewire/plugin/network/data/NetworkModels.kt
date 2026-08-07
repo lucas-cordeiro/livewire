@@ -1,5 +1,9 @@
 package com.livewire.plugin.network.data
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+
+@Serializable
 data class NetworkEvent(
   val id: String,
   val request: NetworkRequest,
@@ -8,6 +12,7 @@ data class NetworkEvent(
   val error: String? = null,
 )
 
+@Serializable
 data class NetworkRequest(
   val method: String,
   val url: String,
@@ -18,10 +23,12 @@ data class NetworkRequest(
   val timestamp: Long,
 )
 
+@Serializable
 data class NetworkResponse(
   val statusCode: Int,
   val headers: Map<String, String>,
   val body: String? = null,
+  @Transient
   val bodyBytes: ByteArray? = null,
   val contentType: String? = null,
   val contentLength: Long? = null,

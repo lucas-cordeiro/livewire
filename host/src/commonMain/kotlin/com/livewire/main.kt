@@ -1,7 +1,10 @@
 package com.livewire
 
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -11,33 +14,65 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.AwtWindow
+import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.livewire.runtime.HostConnectionState.Connected
 import com.livewire.runtime.LivewireHost
+import com.livewire.runtime.SingleInstanceLock
 import com.livewire.runtime.discoverymanager.CompositeDiscoveryManager
 import com.livewire.runtime.discoverymanager.HostApp
+import com.livewire.session.ImportedLogBundle
+import com.livewire.session.LogBundleImporter
 import com.livewire.settings.observe
 import com.livewire.settings.rememberLivewireSettings
 import com.livewire.ui.AppUi
+import com.livewire.ui.ImportedSessionUi
 import com.livewire.ui.NetworkMeterWindow
 import com.livewire.ui.PluginInfo
 import com.livewire.ui.data.ClientManifest
 import com.livewire.ui.data.DarkModeChange
 import com.livewire.ui.data.PluginSelected
 import com.livewire.ui.theme.LivewireTheme
+import kotlin.system.exitProcess
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import java.awt.FileDialog
+import java.awt.GraphicsEnvironment
+import java.io.File
+import javax.swing.JOptionPane
 import livewire.host.generated.resources.Res
 import livewire.host.generated.resources.icon
 import org.jetbrains.compose.resources.painterResource
 
+private const val ShutdownTimeoutMs = 2_000L
+
+fun main() {
+  if (!SingleInstanceLock.acquire()) {
+    reportAlreadyRunning()
+    exitProcess(0)
+  }
+  livewireHost()
+}
+
+private fun reportAlreadyRunning() {
+  val message = "Livewire is already running. Check your open windows."
+  System.err.println(message)
+  if (!GraphicsEnvironment.isHeadless()) {
+    runCatching {
+      JOptionPane.showMessageDialog(null, message, "Livewire", JOptionPane.INFORMATION_MESSAGE)
+    }
+  }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3ExpressiveApi::class)
-fun main() = application {
+private fun livewireHost() = application {
   LivewireLog.debugEnabled = true
 
   val settings = rememberLivewireSettings()
@@ -60,6 +95,7 @@ fun main() = application {
         }
 
         CompositeDiscoveryManager.shutdown()
+        SingleInstanceLock.release()
 
         settings.windowWidth = windowState.size.width.value.toInt()
         settings.windowHeight = windowState.size.height.value.toInt()
@@ -95,6 +131,10 @@ fun main() = application {
 
   var reconnectTargetId by remember { mutableStateOf<String?>(null) }
 
+  var showImportPicker by remember { mutableStateOf(false) }
+  var importedLogs by remember { mutableStateOf<Pair<String, ImportedLogBundle>?>(null) }
+  var importError by remember { mutableStateOf<String?>(null) }
+
   LaunchedEffect(state) {
     if (state != Connected) {
       selectedPlugin = null
@@ -128,12 +168,76 @@ fun main() = application {
         settings.windowX = position.x.value.toInt()
         settings.windowY = position.y.value.toInt()
       }
-      exitApplication()
+
+      runCatching {
+        runBlocking {
+          withTimeout(ShutdownTimeoutMs) {
+            host.connection.close()
+          }
+        }
+      }
+      runCatching { CompositeDiscoveryManager.shutdown() }
+      SingleInstanceLock.release()
+
+      exitProcess(0)
     },
     title = "Livewire",
     icon = painterResource(Res.drawable.icon),
     state = windowState,
   ) {
+    MenuBar {
+      Menu("File") {
+        Item("Import log sessions…", onClick = { showImportPicker = true })
+      }
+    }
+
+    if (showImportPicker) {
+      AwtWindow(
+        create = {
+          object : FileDialog(window, "Import log sessions", FileDialog.LOAD) {
+            override fun setVisible(value: Boolean) {
+              super.setVisible(value)
+              if (value) {
+                showImportPicker = false
+                val selectedFile = file
+                if (selectedFile != null) {
+                  LogBundleImporter.import(File(directory, selectedFile))
+                    .onSuccess { importedLogs = selectedFile to it }
+                    .onFailure { importError = it.message ?: "Import failed" }
+                }
+              }
+            }
+          }
+        },
+        dispose = FileDialog::dispose,
+      )
+    }
+
+    importError?.let { error ->
+      AlertDialog(
+        onDismissRequest = { importError = null },
+        confirmButton = {
+          TextButton(onClick = { importError = null }) {
+            Text("OK")
+          }
+        },
+        title = { Text("Import failed") },
+        text = { Text(error) },
+      )
+    }
+
+    val isDarkMode by remember { settings::darkMode.observe() }.collectAsState()
+    val currentImport = importedLogs
+    if (currentImport != null) {
+      ImportedSessionUi(
+        fileName = currentImport.first,
+        bundle = currentImport.second,
+        darkMode = isDarkMode,
+        onClose = { importedLogs = null },
+      )
+      return@Window
+    }
+
     AppUi(
       scope = scope,
       settings = settings,
@@ -166,6 +270,7 @@ fun main() = application {
         scope.launch { host.connection.connect(app) }
       },
       onNetworkMeterClick = { showNetworkMeter = !showNetworkMeter },
+      onImportClick = { showImportPicker = true },
     )
   }
 

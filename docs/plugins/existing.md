@@ -36,6 +36,41 @@ The constructor is platform-specific, reflecting how databases are located on ea
     install(DatabasePlugin())
     ```
 
+## Logs
+
+A structured log viewer — your app's debug history, live in the host. Filter by tag or message, pick a minimum level, and click an entry to inspect the full message and stack trace.
+
+Install the plugin:
+
+```kotlin
+install(LogsPlugin())
+```
+
+Logs are recorded through the `LivewireLog` facade:
+
+```kotlin
+LivewireLog.d("Auth", "Token refresh started")
+LivewireLog.e("Auth", "Token refresh failed", throwable)
+```
+
+Most apps already route logging through a facade (Timber, Napier, or an in-house `Logger`) — forward it to Livewire from there. A Timber tree, for example:
+
+```kotlin
+class LivewireTree : Timber.Tree() {
+  override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+    when (priority) {
+      Log.VERBOSE -> LivewireLog.v(tag.orEmpty(), message, t)
+      Log.DEBUG -> LivewireLog.d(tag.orEmpty(), message, t)
+      Log.INFO -> LivewireLog.i(tag.orEmpty(), message, t)
+      Log.WARN -> LivewireLog.w(tag.orEmpty(), message, t)
+      else -> LivewireLog.e(tag.orEmpty(), message, t)
+    }
+  }
+}
+```
+
+The collector keeps the most recent 2000 entries in memory; older entries are dropped.
+
 ## Network
 
 The network inspector comes in two parts: the **plugin** that renders the request list in the host, and an **integration** that hooks into your HTTP client and records traffic.
@@ -158,6 +193,29 @@ RecompositionPlugin(
 
 !!! note "iOS Details"
     Due to the lack of reflection in Kotlin/Native, a bit less detail is available when using the recomposition plugin on the iOS platform.
+
+## Session recording
+
+Opt in on the client to persist each app run as a browsable session — logs and network traffic included:
+
+```kotlin
+val livewireClient = LivewireClient {
+  install(LogsPlugin())
+  install(NetworkPlugin())
+  // ...
+  recordSessions()
+}
+```
+
+Every launch records a new session (JSONL per plugin + metadata under the app's private storage), keeping the most recent 20 — tune with `recordSessions(maxSessions = ...)`. Plugins contribute their own recording channels; today Logs and Network record, and more can adopt the `SessionChannel` API.
+
+On Android, a built-in session browser lists recorded sessions and exports any of them as a zip — **Share** opens the system share sheet, **Download** saves it to the device's Downloads folder as `livewire-<appId>-<timestamp>.zip` (handy over adb: `adb pull /sdcard/Download/<file>.zip`). Wire it to a debug entry point in your app:
+
+```kotlin
+LivewireSessions.launch(context)
+```
+
+To read an exported zip on your machine, open the host app and use **File → Import log sessions…**. The session opens with the same plugin drawer as a live connection — Logs and Network are fully browsable; plugins that need a live app show a disclaimer instead.
 
 ## Playground
 

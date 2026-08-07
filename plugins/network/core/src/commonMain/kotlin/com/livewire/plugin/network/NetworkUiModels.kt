@@ -9,6 +9,7 @@ data class NetworkUiState(
   val selectedEvent: NetworkEvent?,
   val filterText: String,
   val expandedSections: Set<DetailSection>,
+  val canClear: Boolean,
   val eventSink: (NetworkUiEvent) -> Unit,
 )
 

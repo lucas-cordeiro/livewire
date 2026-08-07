@@ -2,6 +2,7 @@ plugins {
   id("livewire.kmp.library")
   id("livewire.publish")
   id("livewire.compose")
+  alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -10,9 +11,11 @@ kotlin {
       api(libs.kotlinx.coroutines.android)
     }
     commonMain.dependencies {
+      api(projects.sessions)
       api(projects.ui)
       api(libs.compose.runtime)
       api(libs.kotlinx.coroutines.core)
+      api(libs.kotlinx.serialization.json)
     }
     commonTest.dependencies {
       implementation(libs.kotlin.test)
