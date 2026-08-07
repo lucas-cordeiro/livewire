@@ -22,6 +22,7 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.livewire.runtime.HostConnectionState.Connected
 import com.livewire.runtime.LivewireHost
+import com.livewire.runtime.SingleInstanceLock
 import com.livewire.runtime.discoverymanager.CompositeDiscoveryManager
 import com.livewire.runtime.discoverymanager.HostApp
 import com.livewire.session.ImportedLogBundle
@@ -41,14 +42,37 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import java.awt.FileDialog
+import java.awt.GraphicsEnvironment
 import java.io.File
+import javax.swing.JOptionPane
 import livewire.host.generated.resources.Res
 import livewire.host.generated.resources.icon
 import org.jetbrains.compose.resources.painterResource
 
+private const val ShutdownTimeoutMs = 2_000L
+
+fun main() {
+  if (!SingleInstanceLock.acquire()) {
+    reportAlreadyRunning()
+    exitProcess(0)
+  }
+  livewireHost()
+}
+
+private fun reportAlreadyRunning() {
+  val message = "Livewire is already running. Check your open windows."
+  System.err.println(message)
+  if (!GraphicsEnvironment.isHeadless()) {
+    runCatching {
+      JOptionPane.showMessageDialog(null, message, "Livewire", JOptionPane.INFORMATION_MESSAGE)
+    }
+  }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3ExpressiveApi::class)
-fun main() = application {
+private fun livewireHost() = application {
   LivewireLog.debugEnabled = true
 
   val settings = rememberLivewireSettings()
@@ -71,6 +95,7 @@ fun main() = application {
         }
 
         CompositeDiscoveryManager.shutdown()
+        SingleInstanceLock.release()
 
         settings.windowWidth = windowState.size.width.value.toInt()
         settings.windowHeight = windowState.size.height.value.toInt()
@@ -141,6 +166,17 @@ fun main() = application {
         settings.windowX = position.x.value.toInt()
         settings.windowY = position.y.value.toInt()
       }
+
+      runCatching {
+        runBlocking {
+          withTimeout(ShutdownTimeoutMs) {
+            host.connection.close()
+          }
+        }
+      }
+      runCatching { CompositeDiscoveryManager.shutdown() }
+      SingleInstanceLock.release()
+
       exitProcess(0)
     },
     title = "Livewire",
