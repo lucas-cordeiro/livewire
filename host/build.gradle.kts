@@ -27,6 +27,9 @@ kotlin {
       implementation(projects.runtime)
       implementation(projects.ui)
       implementation(projects.hostUi)
+      implementation(projects.plugins.logs)
+      implementation(projects.plugins.network.core)
+      implementation(projects.sessions)
 
       implementation(libs.compose.runtime)
       implementation(libs.compose.foundation)

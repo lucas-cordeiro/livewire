@@ -8,8 +8,12 @@ import androidx.compose.runtime.setValue
 import com.livewire.plugin.logs.data.LogEvent
 import com.livewire.plugin.logs.data.LogEventCollector
 import com.livewire.plugin.logs.data.LogLevel
+import kotlinx.coroutines.flow.StateFlow
 
-class LogsPresenter {
+class LogsPresenter(
+  private val source: StateFlow<List<LogEvent>> = LogEventCollector.events,
+  private val onClearAll: (() -> Unit)? = { LogEventCollector.clear() },
+) {
 
   private var selectedEvent by mutableStateOf<LogEvent?>(null)
   private var filterText by mutableStateOf("")
@@ -17,7 +21,7 @@ class LogsPresenter {
 
   @Composable
   fun present(): LogsUiState {
-    val allEvents by LogEventCollector.events.collectAsState()
+    val allEvents by source.collectAsState()
 
     val visibleEvents = allEvents.filter { event ->
       event.level.ordinal >= minLevel.ordinal && matchesFilter(event)
@@ -33,6 +37,7 @@ class LogsPresenter {
       selectedEvent = currentSelected,
       filterText = filterText,
       minLevel = minLevel,
+      canClear = onClearAll != null,
     ) { event ->
       when (event) {
         is LogsUiEvent.SelectEvent -> {
@@ -52,7 +57,7 @@ class LogsPresenter {
         }
 
         LogsUiEvent.ClearAll -> {
-          LogEventCollector.clear()
+          onClearAll?.invoke()
           selectedEvent = null
           filterText = ""
         }

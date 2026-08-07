@@ -32,7 +32,7 @@ import com.livewire.ui.widget.TextFieldStyle
 internal fun NetworkToolbar(
   filterText: String,
   onFilterChange: ValueChangeAction,
-  onClearAll: ClickAction,
+  onClearAll: ClickAction?,
   eventCount: Int,
   modifier: LivewireModifier = LivewireModifier,
 ) {
@@ -64,19 +64,21 @@ internal fun NetworkToolbar(
       )
     }
 
-    Spacer(LivewireModifier.width(8.dp))
+    if (onClearAll != null) {
+      Spacer(LivewireModifier.width(8.dp))
 
-    Button(
-      action = onClearAll,
-      size = ButtonSize.Small,
-      style = ButtonStyle.Tonal,
-      shapes = ButtonShapes(
-        shape = RoundedCornerShape(8.dp),
-        pressedShape = CircleShape,
-      )
-    ) {
-      Icon(imageVector = Icons.Delete)
-      Text("Clear")
+      Button(
+        action = onClearAll,
+        size = ButtonSize.Small,
+        style = ButtonStyle.Tonal,
+        shapes = ButtonShapes(
+          shape = RoundedCornerShape(8.dp),
+          pressedShape = CircleShape,
+        )
+      ) {
+        Icon(imageVector = Icons.Delete)
+        Text("Clear")
+      }
     }
   }
 }

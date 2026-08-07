@@ -1,5 +1,8 @@
 package com.livewire.plugin.logs.data
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class LogLevel(val label: String) {
   Verbose("V"),
   Debug("D"),
@@ -8,6 +11,7 @@ enum class LogLevel(val label: String) {
   Error("E"),
 }
 
+@Serializable
 data class LogEvent(
   val id: String,
   val timestamp: Long,

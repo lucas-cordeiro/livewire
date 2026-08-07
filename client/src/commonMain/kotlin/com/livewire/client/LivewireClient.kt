@@ -16,6 +16,7 @@ import com.livewire.logDebug
 import com.livewire.logError
 import com.livewire.transport.DefaultDecoders
 import com.livewire.transport.PayloadDecoder
+import com.livewire.sessions.SessionRecording
 import com.livewire.ui.Plugin
 import com.livewire.ui.PluginInfo
 import com.livewire.ui.composition.LivewireComposition
@@ -69,6 +70,12 @@ class LivewireClient private constructor(
   private var scope = CoroutineScope(baseContext + SupervisorJob() + exceptionHandler)
   private val darkMode = MutableStateFlow(true)
   private val discoveryBroadcaster = DiscoveryBroadcaster()
+
+  init {
+    configuration.sessionRecordingMaxSessions?.let { maxSessions ->
+      SessionRecording.start(maxSessions, configuration.plugins.map { it.info })
+    }
+  }
 
   val server = LivewireServer(
     decoders = configuration.decoders + DefaultDecoders + UiDecoders,
@@ -180,6 +187,7 @@ class LivewireClientBuilder {
   private val decoders = mutableSetOf<PayloadDecoder<*>>()
   private var layoutNodeSerialization = Protobuf
   private var debugLogging = false
+  private var sessionRecordingMaxSessions: Int? = null
 
   fun install(plugin: Plugin) {
     plugins.add(plugin)
@@ -187,6 +195,10 @@ class LivewireClientBuilder {
 
   fun debugLogging(enabled: Boolean = true) {
     debugLogging = enabled
+  }
+
+  fun recordSessions(maxSessions: Int = 20) {
+    sessionRecordingMaxSessions = maxSessions
   }
 
   fun theme(theme: LivewireTheme) {
@@ -206,6 +218,7 @@ class LivewireClientBuilder {
       decoders = decoders,
       layoutNodeSerialization = layoutNodeSerialization,
       debugLogging = debugLogging,
+      sessionRecordingMaxSessions = sessionRecordingMaxSessions,
     )
   }
 }
@@ -216,6 +229,7 @@ class LivewireClientConfiguration(
   val decoders: Set<PayloadDecoder<*>>,
   val layoutNodeSerialization: LayoutNodeSerialization,
   val debugLogging: Boolean,
+  val sessionRecordingMaxSessions: Int? = null,
 )
 
 @DslMarker

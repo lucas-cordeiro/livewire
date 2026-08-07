@@ -194,6 +194,29 @@ RecompositionPlugin(
 !!! note "iOS Details"
     Due to the lack of reflection in Kotlin/Native, a bit less detail is available when using the recomposition plugin on the iOS platform.
 
+## Session recording
+
+Opt in on the client to persist each app run as a browsable session — logs and network traffic included:
+
+```kotlin
+val livewireClient = LivewireClient {
+  install(LogsPlugin())
+  install(NetworkPlugin())
+  // ...
+  recordSessions()
+}
+```
+
+Every launch records a new session (JSONL per plugin + metadata under the app's private storage), keeping the most recent 20 — tune with `recordSessions(maxSessions = ...)`. Plugins contribute their own recording channels; today Logs and Network record, and more can adopt the `SessionChannel` API.
+
+On Android, a built-in session browser lists recorded sessions and shares any of them as a zip — wire it to a debug entry point in your app:
+
+```kotlin
+LivewireSessions.launch(context)
+```
+
+To read an exported zip on your machine, open the host app and use **File → Import log sessions…**. The session opens with the same plugin drawer as a live connection — Logs and Network are fully browsable; plugins that need a live app show a disclaimer instead.
+
 ## Playground
 
 An internal widget catalog exercising every Livewire widget: buttons, chips, text fields, sliders, tabs, tables, animations, and a crash-test button. It isn't published as an artifact, but it's the best reference for what the UI system can do and a good template for your own plugin: [`plugins/playground`](https://github.com/livewire-kt/livewire/tree/main/plugins/playground).

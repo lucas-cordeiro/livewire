@@ -10,6 +10,7 @@ data class LogsUiState(
   val selectedEvent: LogEvent?,
   val filterText: String,
   val minLevel: LogLevel,
+  val canClear: Boolean,
   val eventSink: (LogsUiEvent) -> Unit,
 )
 

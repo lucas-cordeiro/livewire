@@ -37,7 +37,7 @@ internal fun LogsToolbar(
   minLevel: LogLevel,
   onFilterChange: ValueChangeAction,
   onMinLevelChange: (LogLevel) -> Unit,
-  onClearAll: ClickAction,
+  onClearAll: ClickAction?,
   modifier: LivewireModifier = LivewireModifier,
 ) {
   Column(
@@ -72,19 +72,21 @@ internal fun LogsToolbar(
         )
       }
 
-      Spacer(LivewireModifier.width(8.dp))
+      if (onClearAll != null) {
+        Spacer(LivewireModifier.width(8.dp))
 
-      Button(
-        action = onClearAll,
-        size = ButtonSize.Small,
-        style = ButtonStyle.Tonal,
-        shapes = ButtonShapes(
-          shape = RoundedCornerShape(8.dp),
-          pressedShape = CircleShape,
-        )
-      ) {
-        Icon(imageVector = Icons.Delete)
-        Text("Clear")
+        Button(
+          action = onClearAll,
+          size = ButtonSize.Small,
+          style = ButtonStyle.Tonal,
+          shapes = ButtonShapes(
+            shape = RoundedCornerShape(8.dp),
+            pressedShape = CircleShape,
+          )
+        ) {
+          Icon(imageVector = Icons.Delete)
+          Text("Clear")
+        }
       }
     }
 

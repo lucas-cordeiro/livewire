@@ -43,6 +43,7 @@ object ServiceLocator {
       install(PlaygroundPlugin())
       install(PreferencesPlugin { dataStore("settings", settingsDataStore) })
       install(RecompositionPlugin())
+      recordSessions()
       debugLogging(true)
     }
   }

@@ -15,6 +15,7 @@ kotlin {
   sourceSets {
     commonMain.dependencies {
       api(projects.runtime)
+      api(projects.sessions)
       api(projects.ui)
 
       implementation(libs.compose.runtime)

@@ -7,6 +7,7 @@ dependencies {
   implementation(projects.demo.common)
   implementation(projects.client)
   implementation(projects.plugins.database)
+  implementation(projects.plugins.logs)
   implementation(projects.plugins.network.core)
   implementation(projects.plugins.playground)
   implementation(projects.plugins.recomposition)
