@@ -33,6 +33,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -84,6 +85,7 @@ internal fun DisconnectedStateLayout(
   state: HostConnectionState,
   onConnectClick: (HostApp) -> Unit,
   onDisconnectClick: () -> Unit,
+  onImportClick: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   Column(
@@ -137,6 +139,12 @@ internal fun DisconnectedStateLayout(
           .fillMaxHeight()
           .width(selectorWidth),
       )
+    }
+
+    Spacer(Modifier.height(8.dp))
+
+    TextButton(onClick = onImportClick) {
+      Text("Import recorded session…")
     }
   }
 }

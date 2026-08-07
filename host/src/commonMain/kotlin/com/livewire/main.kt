@@ -231,6 +231,7 @@ fun main() = application {
         scope.launch { host.connection.connect(app) }
       },
       onNetworkMeterClick = { showNetworkMeter = !showNetworkMeter },
+      onImportClick = { showImportPicker = true },
     )
   }
 

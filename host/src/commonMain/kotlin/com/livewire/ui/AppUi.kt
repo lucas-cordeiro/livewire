@@ -63,6 +63,7 @@ internal fun AppUi(
   onDisconnect: () -> Unit,
   onConnect: (HostApp) -> Unit,
   onNetworkMeterClick: () -> Unit,
+  onImportClick: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   val isDarkMode: Boolean by remember {
@@ -187,6 +188,7 @@ internal fun AppUi(
               selectedApp = null
               onDisconnect()
             },
+            onImportClick = onImportClick,
           )
         }
         selectedPlugin == null -> {
