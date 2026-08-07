@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
@@ -63,29 +64,39 @@ private fun SessionsScreen(
   onShare: (RecordedSession) -> Unit,
 ) {
   Surface(modifier = Modifier.fillMaxSize()) {
-    if (rows.isEmpty()) {
-      Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize(),
-      ) {
-        Text(
-          text = "No recorded sessions",
-          style = MaterialTheme.typography.bodyLarge,
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-      }
-      return@Surface
+    Box(modifier = Modifier.safeDrawingPadding()) {
+      SessionsList(rows = rows, onShare = onShare)
     }
+  }
+}
 
-    LazyColumn(
-      verticalArrangement = Arrangement.spacedBy(4.dp),
-      modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp),
+@Composable
+private fun SessionsList(
+  rows: List<SessionRowData>,
+  onShare: (RecordedSession) -> Unit,
+) {
+  if (rows.isEmpty()) {
+    Box(
+      contentAlignment = Alignment.Center,
+      modifier = Modifier.fillMaxSize(),
     ) {
-      items(rows, key = { it.session.directoryName }) { row ->
-        SessionRow(row = row, onShare = { onShare(row.session) })
-      }
+      Text(
+        text = "No recorded sessions",
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
+    }
+    return
+  }
+
+  LazyColumn(
+    verticalArrangement = Arrangement.spacedBy(4.dp),
+    modifier = Modifier
+      .fillMaxSize()
+      .padding(16.dp),
+  ) {
+    items(rows, key = { it.session.directoryName }) { row ->
+      SessionRow(row = row, onShare = { onShare(row.session) })
     }
   }
 }

@@ -3,7 +3,8 @@
   <application>
     <activity
       android:name="com.livewire.sessions.SessionsActivity"
-      android:exported="false" />
+      android:exported="false"
+      android:theme="@android:style/Theme.Material.Light.NoActionBar" />
 
     <provider
       android:name="com.livewire.sessions.SessionExportProvider"
