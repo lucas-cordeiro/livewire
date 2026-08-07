@@ -36,6 +36,41 @@ The constructor is platform-specific, reflecting how databases are located on ea
     install(DatabasePlugin())
     ```
 
+## Logs
+
+A structured log viewer — your app's debug history, live in the host. Filter by tag or message, pick a minimum level, and click an entry to inspect the full message and stack trace.
+
+Install the plugin:
+
+```kotlin
+install(LogsPlugin())
+```
+
+Logs are recorded through the `LivewireLog` facade:
+
+```kotlin
+LivewireLog.d("Auth", "Token refresh started")
+LivewireLog.e("Auth", "Token refresh failed", throwable)
+```
+
+Most apps already route logging through a facade (Timber, Napier, or an in-house `Logger`) — forward it to Livewire from there. A Timber tree, for example:
+
+```kotlin
+class LivewireTree : Timber.Tree() {
+  override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+    when (priority) {
+      Log.VERBOSE -> LivewireLog.v(tag.orEmpty(), message, t)
+      Log.DEBUG -> LivewireLog.d(tag.orEmpty(), message, t)
+      Log.INFO -> LivewireLog.i(tag.orEmpty(), message, t)
+      Log.WARN -> LivewireLog.w(tag.orEmpty(), message, t)
+      else -> LivewireLog.e(tag.orEmpty(), message, t)
+    }
+  }
+}
+```
+
+The collector keeps the most recent 2000 entries in memory; older entries are dropped.
+
 ## Network
 
 The network inspector comes in two parts: the **plugin** that renders the request list in the host, and an **integration** that hooks into your HTTP client and records traffic.

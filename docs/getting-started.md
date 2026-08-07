@@ -14,6 +14,9 @@ dependencies {
   // SQLite Database Viewer
   implementation("com.livewire-kt.livewire:plugin-database:<version>")
 
+  // Logs Viewer
+  implementation("com.livewire-kt.livewire:plugin-logs:<version>")
+
   // Network Viewer
   implementation("com.livewire-kt.livewire:plugin-network-core:<version>")
   implementation("com.livewire-kt.livewire:plugin-network-ktor:<version>") // if using ktor

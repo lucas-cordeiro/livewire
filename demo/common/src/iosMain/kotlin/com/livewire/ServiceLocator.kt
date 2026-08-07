@@ -8,6 +8,7 @@ import app.cash.sqldelight.driver.native.NativeSqliteDriver
 import com.livewire.app.LivewireDatabase
 import com.livewire.client.LivewireClient
 import com.livewire.plugin.database.DatabasePlugin
+import com.livewire.plugin.logs.LogsPlugin
 import com.livewire.plugin.network.NetworkPlugin
 import com.livewire.plugin.playground.PlaygroundPlugin
 import com.livewire.plugin.preferences.PreferencesPlugin
@@ -37,6 +38,7 @@ object ServiceLocator {
     LivewireClient {
       theme(CustomLivewireTheme)
       install(DatabasePlugin())
+      install(LogsPlugin())
       install(NetworkPlugin())
       install(PlaygroundPlugin())
       install(PreferencesPlugin { dataStore("settings", settingsDataStore) })
